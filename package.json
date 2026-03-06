@@ -1,0 +1,16 @@
+{
+  "name": "song-queue",
+  "private": true,
+  "workspaces": [
+    "packages/server",
+    "packages/client",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c cyan,green \"npm run dev --workspace=packages/server\" \"npm run dev --workspace=packages/client\"",
+    "build": "npm run build --workspace=packages/client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
