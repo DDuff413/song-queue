@@ -7,6 +7,10 @@ import { apiRoutes } from "./routes/api.js";
 import { authRoutes } from "./routes/auth.js";
 import { broadcastNowPlaying } from "./sse.js";
 import cors from "@fastify/cors";
+import staticFiles from "@fastify/static";
+import { fileURLToPath } from "node:url";
+import { join, dirname } from "node:path";
+import { existsSync } from "node:fs";
 
 const fastify = Fastify({ logger: { level: "info" } });
 
@@ -21,6 +25,16 @@ await fastify.register(cors, {
 
 await fastify.register(authRoutes);
 await fastify.register(apiRoutes);
+
+// Serve the built React client when available (production / tunnel mode)
+const clientDist = join(dirname(fileURLToPath(import.meta.url)), "../../client/dist");
+if (existsSync(clientDist)) {
+  await fastify.register(staticFiles, { root: clientDist, prefix: "/" });
+  // SPA catch-all: non-API/auth routes serve index.html
+  fastify.setNotFoundHandler((_req, reply) => {
+    reply.sendFile("index.html");
+  });
+}
 
 // Poll Spotify every 3 seconds and push now-playing updates to all SSE clients
 let lastTrackId: string | null | undefined = undefined;
