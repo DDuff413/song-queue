@@ -5,6 +5,17 @@ import type { ServerResponse } from "node:http";
 /** All currently open SSE response streams */
 const clients = new Set<ServerResponse>();
 
+/** Last known now-playing state — sent to new SSE clients on connect */
+let lastNowPlaying: NowPlayingTrack | null = null;
+
+export function getLastNowPlaying(): NowPlayingTrack | null {
+  return lastNowPlaying;
+}
+
+export function setLastNowPlaying(track: NowPlayingTrack | null): void {
+  lastNowPlaying = track;
+}
+
 export function addClient(res: ServerResponse): void {
   clients.add(res);
   res.on("close", () => clients.delete(res));
@@ -24,6 +35,7 @@ export function broadcastQueue(queue: SongRequest[]): void {
 }
 
 export function broadcastNowPlaying(track: NowPlayingTrack | null): void {
+  lastNowPlaying = track;
   broadcast("nowPlaying", track);
 }
 

@@ -1,4 +1,4 @@
-import { addClient, broadcastQueue } from "../sse.js";
+import { addClient, broadcastQueue, getLastNowPlaying } from "../sse.js";
 import {
   addToQueue,
   isAuthenticated,
@@ -53,8 +53,17 @@ export async function apiRoutes(fastify: FastifyInstance): Promise<void> {
     const { spotifyTrackId, title, artist, albumArt, requestedBy } =
       request.body;
 
-    if (!spotifyTrackId || !requestedBy?.trim()) {
+    // Spotify track IDs are base-62, 22 chars — reject anything else to prevent injection
+    if (!/^[A-Za-z0-9]{1,32}$/.test(spotifyTrackId ?? "")) {
+      return reply.status(400).send({ error: "Invalid track ID" });
+    }
+
+    if (!requestedBy?.trim()) {
       return reply.status(400).send({ error: "Missing required fields" });
+    }
+
+    if (requestedBy.trim().length > 40) {
+      return reply.status(400).send({ error: "Name too long" });
     }
 
     await addToQueue(spotifyTrackId);
@@ -103,6 +112,9 @@ export async function apiRoutes(fastify: FastifyInstance): Promise<void> {
 
     // Send current state immediately on connect
     res.write(`event: queue\ndata: ${JSON.stringify(store.queue)}\n\n`);
+    res.write(
+      `event: nowPlaying\ndata: ${JSON.stringify(getLastNowPlaying())}\n\n`,
+    );
     res.write(
       `event: status\ndata: ${JSON.stringify({ authenticated: isAuthenticated() })}\n\n`,
     );

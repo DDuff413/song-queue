@@ -24,7 +24,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     async (request, reply) => {
       const { code, error } = request.query;
 
-      if (error ?? !code) {
+      if (error || !code) {
         return reply.status(400).send({ error: error ?? "No code provided" });
       }
 

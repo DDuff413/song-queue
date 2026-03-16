@@ -140,11 +140,11 @@ export async function skipTrack(): Promise<void> {
 
 export async function getNowPlaying(): Promise<NowPlayingTrack | null> {
   const token = await getAccessToken();
-  const res = await fetch(`${SPOTIFY_API}/me/player/currently-playing`, {
+  const res = await fetch(`${SPOTIFY_API}/me/player`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  // 204 = nothing playing
+  // 204 = no active player
   if (res.status === 204) return null;
   if (!res.ok) return null;
 
