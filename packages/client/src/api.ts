@@ -29,3 +29,11 @@ export async function addToQueue(payload: QueuePayload): Promise<void> {
     throw new Error(body.error ?? "Failed to add to queue");
   }
 }
+
+export async function skipTrack(): Promise<void> {
+  const res = await fetch("/api/skip", { method: "POST" });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? "Failed to skip track");
+  }
+}

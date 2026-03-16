@@ -124,6 +124,20 @@ export async function addToQueue(spotifyTrackId: string): Promise<void> {
   }
 }
 
+export async function skipTrack(): Promise<void> {
+  const token = await getAccessToken();
+  const res = await fetch(`${SPOTIFY_API}/me/player/next`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  // 204 = success with no body
+  if (!res.ok && res.status !== 204) {
+    const err = await res.text();
+    throw new Error(`Failed to skip track: ${err}`);
+  }
+}
+
 export async function getNowPlaying(): Promise<NowPlayingTrack | null> {
   const token = await getAccessToken();
   const res = await fetch(`${SPOTIFY_API}/me/player/currently-playing`, {

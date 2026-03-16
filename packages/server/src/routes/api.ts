@@ -1,5 +1,10 @@
 import { addClient, broadcastQueue } from "../sse.js";
-import { addToQueue, isAuthenticated, searchTracks } from "../spotify.js";
+import {
+  addToQueue,
+  isAuthenticated,
+  searchTracks,
+  skipTrack,
+} from "../spotify.js";
 
 import type { FastifyInstance } from "fastify";
 import type { SongRequest } from "@song-queue/shared";
@@ -73,6 +78,15 @@ export async function apiRoutes(fastify: FastifyInstance): Promise<void> {
   // ---------- Get queue (REST fallback) ----------
   fastify.get("/api/queue", async () => {
     return { queue: store.queue };
+  });
+
+  // ---------- Skip current track ----------
+  fastify.post("/api/skip", async (_request, reply) => {
+    if (!isAuthenticated()) {
+      return reply.status(401).send({ error: "Not authenticated" });
+    }
+    await skipTrack();
+    return { ok: true };
   });
 
   // ---------- SSE stream ----------

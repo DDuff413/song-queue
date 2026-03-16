@@ -45,7 +45,7 @@ function App() {
         </header>
 
         {/* Now playing — full width */}
-        <NowPlaying track={nowPlaying} />
+        <NowPlaying track={nowPlaying} authenticated={authenticated} />
 
         {/* Search — full width */}
         <SearchBar authenticated={authenticated} />
