@@ -1,9 +1,22 @@
 import { addToQueue, searchTracks } from "../api.js";
+import {
+  adjectives,
+  animals,
+  uniqueNamesGenerator,
+} from "unique-names-generator";
 import { useEffect, useRef, useState } from "react";
 
 import type { TrackResult } from "@song-queue/shared";
 
 const NAME_KEY = "song-queue:name";
+
+function generateRandomName(): string {
+  return uniqueNamesGenerator({
+    dictionaries: [adjectives, animals],
+    separator: " ",
+    style: "capital",
+  });
+}
 
 function formatMs(ms: number): string {
   const total = Math.floor(ms / 1000);
@@ -20,6 +33,8 @@ export function SearchBar({ authenticated }: SearchBarProps) {
   const [name, setName] = useState<string>(
     () => localStorage.getItem(NAME_KEY) ?? "",
   );
+  // Generate a stable random name per session as the placeholder
+  const [randomName] = useState(() => generateRandomName());
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TrackResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -71,10 +86,6 @@ export function SearchBar({ authenticated }: SearchBarProps) {
 
   const handleAdd = async (track: TrackResult) => {
     setError(null);
-    if (!name.trim()) {
-      setError("Please enter your name first");
-      return;
-    }
     setAdding(track.spotifyTrackId);
     try {
       await addToQueue({
@@ -82,7 +93,7 @@ export function SearchBar({ authenticated }: SearchBarProps) {
         title: track.title,
         artist: track.artist,
         albumArt: track.albumArt,
-        requestedBy: name.trim(),
+        requestedBy: name.trim() || randomName,
       });
       setAdded((prev) => new Set(prev).add(track.spotifyTrackId));
       setQuery("");
@@ -105,7 +116,7 @@ export function SearchBar({ authenticated }: SearchBarProps) {
           type="text"
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
-          placeholder="Enter your name…"
+          placeholder={randomName}
           maxLength={40}
           className="w-full rounded-lg bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/30
                      outline-none focus:ring-2 focus:ring-green-500 transition"

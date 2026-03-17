@@ -1,16 +1,21 @@
 import "dotenv/config";
 
+import {
+  broadcastNowPlaying,
+  broadcastQueue,
+  setLastNowPlaying,
+} from "./sse.js";
 import { dirname, join } from "node:path";
 import { getNowPlaying, isAuthenticated } from "./spotify.js";
 
 import Fastify from "fastify";
 import { apiRoutes } from "./routes/api.js";
 import { authRoutes } from "./routes/auth.js";
-import { broadcastNowPlaying, setLastNowPlaying } from "./sse.js";
 import cors from "@fastify/cors";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import staticFiles from "@fastify/static";
+import { store } from "./store.js";
 
 const fastify = Fastify({ logger: { level: "info" } });
 
@@ -57,11 +62,24 @@ setInterval(async () => {
 
     // Expected progress based on elapsed time since last poll
     const elapsed = now - lastPollTime;
-    const expectedProgressMs = lastIsPlaying ? lastProgressMs + elapsed : lastProgressMs;
+    const expectedProgressMs = lastIsPlaying
+      ? lastProgressMs + elapsed
+      : lastProgressMs;
     // Seek detected if actual progress diverges by more than 3 seconds from expected
-    const seeked = lastPollTime > 0 && Math.abs(newProgressMs - expectedProgressMs) > 3_000;
+    const seeked =
+      lastPollTime > 0 && Math.abs(newProgressMs - expectedProgressMs) > 3_000;
 
     if (newId !== lastTrackId || newIsPlaying !== lastIsPlaying || seeked) {
+      // Remove the now-playing song from the request history when the track changes
+      if (newId !== lastTrackId && lastTrackId) {
+        const prevIdx = store.queue.findIndex(
+          (s) => s.spotifyTrackId === lastTrackId,
+        );
+        if (prevIdx !== -1) {
+          store.queue.splice(prevIdx, 1);
+          broadcastQueue(store.queue);
+        }
+      }
       broadcastNowPlaying(track);
     } else {
       // Update stored state without broadcasting (keeps it fresh for new connects)
