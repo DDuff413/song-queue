@@ -40,6 +40,9 @@ export function SearchBar({ authenticated }: SearchBarProps) {
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState<string | null>(null); // spotifyTrackId being added
   const [added, setAdded] = useState<Set<string>>(new Set());
+  const addedTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -96,6 +99,16 @@ export function SearchBar({ authenticated }: SearchBarProps) {
         requestedBy: name.trim() || randomName,
       });
       setAdded((prev) => new Set(prev).add(track.spotifyTrackId));
+      // Reset the "Added" state after 3 seconds so the song can be requested again
+      const timer = setTimeout(() => {
+        setAdded((prev) => {
+          const next = new Set(prev);
+          next.delete(track.spotifyTrackId);
+          return next;
+        });
+        addedTimersRef.current.delete(track.spotifyTrackId);
+      }, 3_000);
+      addedTimersRef.current.set(track.spotifyTrackId, timer);
       setQuery("");
       setResults([]);
     } catch (err) {

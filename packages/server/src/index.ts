@@ -70,13 +70,14 @@ setInterval(async () => {
       lastPollTime > 0 && Math.abs(newProgressMs - expectedProgressMs) > 3_000;
 
     if (newId !== lastTrackId || newIsPlaying !== lastIsPlaying || seeked) {
-      // Remove the now-playing song from the request history when the track changes
-      if (newId !== lastTrackId && lastTrackId) {
-        const prevIdx = store.queue.findIndex(
-          (s) => s.spotifyTrackId === lastTrackId,
+      // When the track changes, remove the newly playing song from the queue
+      // (it was sitting there as "Up next" and has now started playing)
+      if (newId !== lastTrackId && newId) {
+        const nowPlayingIdx = store.queue.findIndex(
+          (s) => s.spotifyTrackId === newId,
         );
-        if (prevIdx !== -1) {
-          store.queue.splice(prevIdx, 1);
+        if (nowPlayingIdx !== -1) {
+          store.queue.splice(nowPlayingIdx, 1);
           broadcastQueue(store.queue);
         }
       }

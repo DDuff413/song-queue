@@ -38,7 +38,7 @@ function App() {
 
         {/* App header */}
         <header className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">🎵 Song Queue</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Song Queue</h1>
           <p className="text-sm text-white/40 mt-0.5">
             Search for a song and add it to the queue
           </p>
