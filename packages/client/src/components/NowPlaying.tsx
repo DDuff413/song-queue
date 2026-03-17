@@ -17,8 +17,21 @@ function formatMs(ms: number): string {
 
 export function NowPlaying({ track, authenticated }: NowPlayingProps) {
   const [skipping, setSkipping] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  async function handleSkip() {
+  // Requester is embedded in the track when it transitions from queued → now playing
+  const requester = track?.requestedBy ?? null;
+
+  function handleSkipClick() {
+    if (requester) {
+      setShowConfirm(true);
+    } else {
+      doSkip();
+    }
+  }
+
+  async function doSkip() {
+    setShowConfirm(false);
     setSkipping(true);
     try {
       await skipTrack();
@@ -90,10 +103,15 @@ export function NowPlaying({ track, authenticated }: NowPlayingProps) {
               {formatMs(track.durationMs)}
             </span>
           </div>
+          {requester && (
+            <p className="mt-1.5 text-xs text-white/40">
+              Requested by <span className="text-white/60">{requester}</span>
+            </p>
+          )}
         </div>
         {authenticated && (
           <button
-            onClick={handleSkip}
+            onClick={handleSkipClick}
             disabled={skipping}
             className="hidden sm:block ml-2 flex-shrink-0 rounded-lg bg-white/10 px-3 py-1.5
                        text-xs font-medium text-white/70 hover:bg-white/20 hover:text-white
@@ -105,13 +123,44 @@ export function NowPlaying({ track, authenticated }: NowPlayingProps) {
       </div>
       {authenticated && (
         <button
-          onClick={handleSkip}
+          onClick={handleSkipClick}
           disabled={skipping}
           className="sm:hidden mt-3 w-full rounded-lg bg-white/10 py-2 text-xs font-medium
                      text-white/70 hover:bg-white/20 hover:text-white transition disabled:opacity-40"
         >
           {skipping ? "…" : "Skip"}
         </button>
+      )}
+
+      {/* Skip confirmation modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-gray-900 border border-white/10 p-6 shadow-2xl">
+            <p className="text-lg font-semibold text-white mb-2">
+              Skip this song?
+            </p>
+            <p className="text-sm text-white/60 mb-6">
+              {requester} picked this one. They're probably watching. Still want
+              to?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 rounded-lg bg-white/10 py-2.5 text-sm font-medium
+                           text-white/70 hover:bg-white/20 transition"
+              >
+                Actually, no
+              </button>
+              <button
+                onClick={doSkip}
+                className="flex-1 rounded-lg bg-red-500/80 py-2.5 text-sm font-medium
+                           text-white hover:bg-red-500 transition"
+              >
+                Skip anyway
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -24,4 +24,5 @@ export interface NowPlayingTrack {
   durationMs: number;
   progressMs: number;
   isPlaying: boolean;
+  requestedBy?: string;
 }

@@ -77,8 +77,10 @@ setInterval(async () => {
           (s) => s.spotifyTrackId === newId,
         );
         if (nowPlayingIdx !== -1) {
-          store.queue.splice(nowPlayingIdx, 1);
+          const [requested] = store.queue.splice(nowPlayingIdx, 1);
           broadcastQueue(store.queue);
+          // Attach who requested it so the skip confirmation can name them
+          if (track) track.requestedBy = requested.requestedBy;
         }
       }
       broadcastNowPlaying(track);
