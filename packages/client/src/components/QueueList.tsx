@@ -30,30 +30,44 @@ export function QueueList({ queue }: QueueListProps) {
         </div>
       ) : (
         <ul className="space-y-2">
-          {[...queue].reverse().map((song) => (
-            <li
-              key={song.id}
-              className="flex items-center gap-3 rounded-xl bg-white/5 p-3"
-            >
-              <img
-                src={song.albumArt}
-                alt={song.title}
-                className="h-10 w-10 flex-shrink-0 rounded object-cover"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-white truncate">
-                  {song.title}
-                </p>
-                <p className="text-xs text-white/50 truncate">{song.artist}</p>
-              </div>
-              <div className="flex-shrink-0 text-right">
-                <p className="text-xs text-white/60">{song.requestedBy}</p>
-                <p className="text-xs text-white/30">
-                  {timeAgo(song.requestedAt)}
-                </p>
-              </div>
-            </li>
-          ))}
+          {[...queue].map((song, i) => {
+            const isNext = i === 0;
+            return (
+              <li
+                key={song.id}
+                className={`flex items-center gap-3 rounded-xl p-3 ${
+                  isNext
+                    ? "bg-green-500/15 ring-1 ring-green-500/30"
+                    : "bg-white/5"
+                }`}
+              >
+                <img
+                  src={song.albumArt}
+                  alt={song.title}
+                  className="h-10 w-10 flex-shrink-0 rounded object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-white truncate">
+                    {song.title}
+                  </p>
+                  <p className="text-xs text-white/50 truncate">
+                    {song.artist}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 text-right">
+                  {isNext ? (
+                    <p className="text-xs font-semibold text-green-400 mb-0.5">
+                      Up next
+                    </p>
+                  ) : null}
+                  <p className="text-xs text-white/60">{song.requestedBy}</p>
+                  <p className="text-xs text-white/30">
+                    {timeAgo(song.requestedAt)}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
